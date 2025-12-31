@@ -5,7 +5,7 @@ import ProfessorRanking from './ProfessorRanking'
 function App() {
 
   // Dropdown menus
-  const [departmentList, setDepartmentList] = useState([])
+  const [departmentList, setDepartmentList] = useState(["Failed to load!"])
 
   const [searchResults, setSearchResults] = useState([])
   const [courseNumber, setSearchTerm] = useState("")
@@ -13,10 +13,16 @@ function App() {
 
   const [searchHelper, setSearchHelper] = useState("")
 
-  const loadDepartments = async () => {
+const loadDepartments = async () => {
+  try {
     const response = await axios.get("http://localhost:8080/api/departments");
-    setDepartmentList(response.data.data)
+    setDepartmentList(response.data.data);
+  } 
+  catch (error) {
+    console.error("Failed to load departments:", error);
+    setSearchHelper("Failed to load departments! Please refresh or try again later.")
   }
+};
 
 
   useEffect(() => {
@@ -26,16 +32,23 @@ function App() {
   const search = async () => {
     setSearchResults([])
     if (deptType !== "" && courseNumber.length > 0) {
-      const result = await axios.get("http://localhost:8080/api/search", {params: {deptName: deptType, courseNumber: courseNumber}});
-      if (result === null) {
-        setSearchHelper("No results found for " + deptType + " " + courseNumber)
-      }
-      else {
-        // display class title, etc.
-        console.log(result.data)
-        setSearchResults(result.data)
-        setSearchHelper("Search results for " + deptType + " " + courseNumber)
-      }
+        try {
+          const result = await axios.get("http://localhost:8080/api/search", {params: {deptName: deptType, courseNumber: courseNumber}});
+          if (result.data === null) {
+          setSearchHelper("No results found for " + deptType + " " + courseNumber)
+          }
+          else {
+            // display class title, etc.
+            console.log(result.data)
+            setSearchResults(result.data)
+            setSearchHelper("Search results for " + deptType + " " + courseNumber)
+          }
+        } 
+        catch (error) {
+          console.error("Failed to search:", error);
+          setSearchHelper("Failed to reach API! Please refresh or try again later.")
+        }
+
     } 
     else {
       setSearchHelper("Department and Course Number are required fields")

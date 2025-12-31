@@ -5,7 +5,7 @@ function Result ({ professor }){
     return (
         <div className="result-container">
             <h1>{professor.instructor}</h1>
-            <code>Average class GPA: {professor.averageGPA.toFixed(2)}</code>
+            <code>Average class GPA: {professor.averageGPA}</code>
 
         </div>
     )
