@@ -5,12 +5,12 @@ import ProfessorRanking from './ProfessorRanking'
 function App() {
 
   // Dropdown menus
-  const [departmentList, setDepartmentList] = useState(["Failed to load!"])
+  const [departmentList, setDepartmentList] = useState([])
 
-  const [searchResults, setSearchResults] = useState([])
   const [courseNumber, setSearchTerm] = useState("")
   const [deptType, setDeptType] = useState("")
 
+  const [searchResults, setSearchResults] = useState([])
   const [searchHelper, setSearchHelper] = useState("")
 
 const loadDepartments = async () => {
@@ -33,7 +33,13 @@ const loadDepartments = async () => {
     setSearchResults([])
     if (deptType !== "" && courseNumber.length > 0) {
         try {
-          const result = await axios.get("http://localhost:8080/api/search", {params: {deptName: deptType, courseNumber: courseNumber}});
+          const result = await axios.get("http://localhost:8080/api/search", 
+            {params: 
+              {
+                deptName: deptType, 
+                courseNumber: courseNumber,
+
+              }});
           if (result.data === null) {
           setSearchHelper("No results found for " + deptType + " " + courseNumber)
           }
