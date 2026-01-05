@@ -56,8 +56,15 @@ def sort_raw_grade_data(grade_data: dict, course_data: dict):
                 "instructor": professor_name,
                 "shortenedName": professor_name,
                 "averageGPA": 0,
-                "studentsTaught": 0,
                 "courses": {},
+                "studentsTaught": 0,
+                "stats": {
+                    "gradeACount": 0,
+                    "gradeBCount": 0,
+                    "gradeCCount": 0,
+                    "gradeDCount": 0,
+                    "gradeFCount": 0,
+                },
                 "lastTaught": data["year"],
             }
             # Add professor profile to the list
@@ -73,7 +80,7 @@ def sort_raw_grade_data(grade_data: dict, course_data: dict):
 
         # Check if specific quarter/year is in the professor profile (since professors can have multiple of the same classe in one quarter)
         if year_quarter not in profile["courses"]:
-            profile["courses"][year_quarter] = course_grades
+            profile["courses"][year_quarter] = course_grades.copy()
         else:
             for grade in course_grades:
                 profile["courses"][year_quarter][grade] += course_grades[grade]
@@ -83,8 +90,14 @@ def sort_raw_grade_data(grade_data: dict, course_data: dict):
         total_students = sum(grades[k] for k in ["gradeACount","gradeBCount","gradeCCount","gradeDCount","gradeFCount"])
         total_score = 4*grades["gradeACount"] + 3*grades["gradeBCount"] + 2*grades["gradeCCount"] + 1*grades["gradeDCount"] + 0*grades["gradeFCount"]
         grades["averageGPA"] = total_score / total_students if total_students > 0 else 0
+        # Cannot exist cause of copies of same class for profile["studentsTaught"] += total_students
 
+        # Add to total data
+        for grade in course_grades:
+            profile["stats"][grade] += course_grades[grade]
     
+
+
     for profile in sorted_data:
         # Compute the average GPA of the ENTIRE class
         total_students = 0
@@ -94,14 +107,13 @@ def sort_raw_grade_data(grade_data: dict, course_data: dict):
             total_score += 4*courseData["gradeACount"] + 3*courseData["gradeBCount"] + 2*courseData["gradeCCount"] + 1*courseData["gradeDCount"] + 0*courseData["gradeFCount"]
         overall_gpa = total_score / total_students if total_students > 0 else 0
         profile["averageGPA"] = round(overall_gpa, 2)
-        profile["studentsTaught"] += total_students
+        profile["studentsTaught"] += total_students # Right position
 
     # Convert shortened name to full name with course_data
     for instructor in course_data["instructors"]:
         for shortenedName in instructor["shortenedNames"]:
             if shortenedName in professors_added:
                 sorted_data[professors_added.index(shortenedName)]["instructor"] = instructor["name"]
-                print(sorted_data[professors_added.index(shortenedName)])
                 break
 
     # Sort data by descending GPA
