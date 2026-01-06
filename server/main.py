@@ -44,6 +44,9 @@ def sort_raw_grade_data(grade_data: dict, course_data: dict):
             "gradeCCount": data["gradeCCount"],
             "gradeDCount": data["gradeDCount"],
             "gradeFCount": data["gradeFCount"],
+            "gradePCount": data["gradePCount"],
+            "gradeNPCount": data["gradeNPCount"],
+            "gradeWCount": data["gradeWCount"]
         }
 
         # Create an empty reference variable for the professor profile
@@ -64,6 +67,9 @@ def sort_raw_grade_data(grade_data: dict, course_data: dict):
                     "gradeCCount": 0,
                     "gradeDCount": 0,
                     "gradeFCount": 0,
+                    "gradePCount": 0,
+                    "gradeNPCount": 0,
+                    "gradeWCount": 0
                 },
                 "lastTaught": data["year"],
             }
@@ -87,27 +93,41 @@ def sort_raw_grade_data(grade_data: dict, course_data: dict):
 
         # Computes the average GPA for the one class
         grades = profile["courses"][year_quarter]
-        total_students = sum(grades[k] for k in ["gradeACount","gradeBCount","gradeCCount","gradeDCount","gradeFCount"])
+        pnp_total_students = sum(grades[k] for k in ["gradePCount","gradeNPCount"])
+        gpa_total_students = sum(grades[k] for k in ["gradeACount","gradeBCount","gradeCCount","gradeDCount","gradeFCount"])
         total_score = 4*grades["gradeACount"] + 3*grades["gradeBCount"] + 2*grades["gradeCCount"] + 1*grades["gradeDCount"] + 0*grades["gradeFCount"]
-        grades["averageGPA"] = total_score / total_students if total_students > 0 else 0
-        # Cannot exist cause of copies of same class for profile["studentsTaught"] += total_students
+        grades["averageGPA"] = round(total_score / gpa_total_students if gpa_total_students > 0 else 0, 2)
+        grades["totalStudents"] = pnp_total_students + gpa_total_students
+        grades["passRate"] = sum(grades[k] for k in ["gradeACount","gradeBCount","gradeCCount"])/grades["totalStudents"]
+        
 
         # Add to total data
         for grade in course_grades:
             profile["stats"][grade] += course_grades[grade]
-    
-
+        
 
     for profile in sorted_data:
         # Compute the average GPA of the ENTIRE class
+        passing_students = 0
         total_students = 0
-        total_score = 0
+        w_total_students = 0
+        gpa_total_students = 0
+        gpa_total_score = 0
+
         for course, courseData in profile["courses"].items():
-            total_students += sum(courseData[k] for k in ["gradeACount","gradeBCount","gradeCCount","gradeDCount","gradeFCount"])
-            total_score += 4*courseData["gradeACount"] + 3*courseData["gradeBCount"] + 2*courseData["gradeCCount"] + 1*courseData["gradeDCount"] + 0*courseData["gradeFCount"]
-        overall_gpa = total_score / total_students if total_students > 0 else 0
+            gpa_total_students += sum(courseData[k] for k in ["gradeACount","gradeBCount","gradeCCount","gradeDCount","gradeFCount"])
+            gpa_total_score += 4*courseData["gradeACount"] + 3*courseData["gradeBCount"] + 2*courseData["gradeCCount"] + 1*courseData["gradeDCount"] + 0*courseData["gradeFCount"]
+
+            w_total_students += courseData["gradeWCount"]
+            total_students += courseData["totalStudents"]
+            passing_students += courseData["passRate"] * courseData["totalStudents"]
+
+        overall_gpa = gpa_total_score / gpa_total_students if total_students > 0 else 0
         profile["averageGPA"] = round(overall_gpa, 2)
-        profile["studentsTaught"] += total_students # Right position
+        profile["studentsTaught"] += total_students
+        profile["passRate"] = round(passing_students / total_students, 2)
+        profile["dropCount"] = w_total_students
+        
 
     # Convert shortened name to full name with course_data
     for instructor in course_data["instructors"]:
