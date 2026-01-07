@@ -266,7 +266,7 @@ export default function App() {
                 value={courseNumber}
                 onChange={(e) => setCourseNumber(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="e.g., 161"
+                placeholder="e.g., 45C"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>

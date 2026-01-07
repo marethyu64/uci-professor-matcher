@@ -1,15 +1,21 @@
-import { User, TrendingUp, Users, Calendar, Award } from 'lucide-react';
+import { User, TrendingUp, Users, Calendar, Award, ChevronDown, ChevronUp } from 'lucide-react';
+import { Button } from './ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { Badge } from './ui/badge';
+import { useState } from 'react';
 
 interface CourseStats {
   averageGPA: number;
   passRate: number;
-  dropCount: number;
   totalStudents: number;
   gradeACount: number;
   gradeBCount: number;
   gradeCCount: number;
   gradeDCount: number;
   gradeFCount: number;
+  gradePCount: number;
+  gradeNPCount: number;
+  gradeWCount: number;
 }
 
 interface Courses {
@@ -28,15 +34,16 @@ interface Stats {
 }
 
 interface Professor {
-  shortenedName: string;
-  averageGPA: string; 
-  lastTaught: string;
+  shortenedName: string;        // Professor name from backend
+  averageGPA: string;            // GPA as string from backend
+  lastTaught: string;            // e.g., "Fall 2025"
   stats: Stats;
-  courses: Courses;
   studentsTaught: number;
-  passRate: number;
-  difficulty?: number;
-  wouldTakeAgain?: number;
+  studentsTaughtNoPNP: number;
+  courses: Courses;
+  passRate?: number;             // Optional: percentage who passed
+  difficulty?: number;           // Optional: difficulty rating 1-5
+  wouldTakeAgain?: number;       // Optional: percentage who would take again
 }
 
 interface ProfessorCardProps {
@@ -44,10 +51,14 @@ interface ProfessorCardProps {
 }
 
 export function ProfessorCard({ professor }: ProfessorCardProps) {
-  /**
-   * Get color styling based on GPA value
-   * Higher GPA = green, lower GPA = red
-   */
+
+  const [showHistory, setShowHistory] = useState(false);
+
+  const formatTerm = (term: string) => {
+    const [year, quarter] = term.split('-');
+    return `${quarter} ${year}`;
+  };
+
   const getGPAColor = (gpa: number) => {
     if (gpa >= 3.5) return 'text-green-600 bg-green-50';
     if (gpa >= 3.0) return 'text-blue-600 bg-blue-50';
@@ -79,7 +90,7 @@ export function ProfessorCard({ professor }: ProfessorCardProps) {
           <div>
             {/* Display professor name from backend */}
             <h3 className="text-gray-900">{professor.shortenedName}</h3>
-            <p className="text-gray-500 mt-1">Last taught: {professor.lastTaught}</p>
+            <p className="text-gray-500 mt-1">Last record: {professor.lastTaught}</p>
           </div>
         </div>
 
@@ -103,7 +114,7 @@ export function ProfessorCard({ professor }: ProfessorCardProps) {
                 <TrendingUp className="w-4 h-4" />
                 <div>
                   <div className="text-xs opacity-75">Pass Rate</div>
-                  <div>{professor.passRate * 100}%</div>
+                  <div>{(professor.passRate * 100).toFixed(0)}%</div>
                 </div>
               </div>
             </div>
@@ -157,14 +168,131 @@ export function ProfessorCard({ professor }: ProfessorCardProps) {
               <span className="text-sm">Grade Distribution</span>
             </div>
             <div className="text-gray-900 text-sm">
-              A: {Math.round(professor.stats.gradeACount / professor.studentsTaught * 100)}% 
+              A: {Math.round(professor.stats.gradeACount / professor.studentsTaughtNoPNP * 100)}% 
               <span className="text-gray-400 mx-1">|</span>
-              B: {Math.round(professor.stats.gradeBCount / professor.studentsTaught * 100)}%
+              B: {Math.round(professor.stats.gradeBCount / professor.studentsTaughtNoPNP * 100)}%
               <span className="text-gray-400 mx-1">|</span>
-              C: {Math.round(professor.stats.gradeCCount / professor.studentsTaught * 100)}%
+              C: {Math.round(professor.stats.gradeCCount / professor.studentsTaughtNoPNP * 100)}%
             </div>
           </div>
         </div>
+
+        {/* Collapsible Course History */}
+        <Collapsible open={showHistory} onOpenChange={setShowHistory}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full mt-4 hover:bg-gray-50">
+              {showHistory ? (
+                <>
+                  <ChevronUp className="mr-2 size-4" />
+                  Hide Course History
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="mr-2 size-4" />
+                  View Course History ({Object.keys(professor.courses).length} terms)
+                </>
+              )}
+            </Button>
+          </CollapsibleTrigger>
+        
+          <CollapsibleContent className="mt-4 space-y-3">
+            {Object.entries(professor.courses)
+              .sort(([a], [b]) => b.localeCompare(a))
+              .map(([term, courseData]) => (
+                <div key={term} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium">{formatTerm(term)}</h4>
+                    <div className="flex gap-2">
+                      <Badge variant="secondary">
+                        <Award className="mr-1 size-3" />
+                        GPA: {courseData.averageGPA.toFixed(2)}
+                      </Badge>
+                      <Badge variant="secondary">
+                        <TrendingUp className="mr-1 size-3" />
+                        Pass: {(courseData.passRate * 100).toFixed(0)}%
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Grade Distribution */}
+                  <div className="space-y-2">
+                    <div className="text-sm text-gray-600 mb-2">
+                      Grade Distribution ({courseData.totalStudents} students)
+                    </div>
+                    
+                    <div className="grid grid-cols-5 gap-2 text-sm">
+                      <div className="p-2 bg-green-50 rounded text-center">
+                        <div className="text-green-700">A</div>
+                        <div className="text-xs text-gray-600">{courseData.gradeACount}</div>
+                        <div className="text-xs text-gray-500">
+                          ({((courseData.gradeACount / courseData.totalStudents) * 100).toFixed(1)}%)
+                        </div>
+                      </div>
+                      
+                      <div className="p-2 bg-blue-50 rounded text-center">
+                        <div className="text-blue-700">B</div>
+                        <div className="text-xs text-gray-600">{courseData.gradeBCount}</div>
+                        <div className="text-xs text-gray-500">
+                          ({((courseData.gradeBCount / courseData.totalStudents) * 100).toFixed(1)}%)
+                        </div>
+                      </div>
+                      
+                      <div className="p-2 bg-yellow-50 rounded text-center">
+                        <div className="text-yellow-700">C</div>
+                        <div className="text-xs text-gray-600">{courseData.gradeCCount}</div>
+                        <div className="text-xs text-gray-500">
+                          ({((courseData.gradeCCount / courseData.totalStudents) * 100).toFixed(1)}%)
+                        </div>
+                      </div>
+                      
+                      <div className="p-2 bg-orange-50 rounded text-center">
+                        <div className="text-orange-700">D</div>
+                        <div className="text-xs text-gray-600">{courseData.gradeDCount}</div>
+                        <div className="text-xs text-gray-500">
+                          ({((courseData.gradeDCount / courseData.totalStudents) * 100).toFixed(1)}%)
+                        </div>
+                      </div>
+                      
+                      <div className="p-2 bg-red-50 rounded text-center">
+                        <div className="text-red-700">F</div>
+                        <div className="text-xs text-gray-600">{courseData.gradeFCount}</div>
+                        <div className="text-xs text-gray-500">
+                          ({((courseData.gradeFCount / courseData.totalStudents) * 100).toFixed(1)}%)
+                        </div>
+                      </div>
+
+                      {courseData.gradePCount !== 0 || courseData.gradeNPCount !== 0 && (
+                        <>
+                          <div className="p-2 bg-purple-50 rounded text-center">
+                            <div className="text-purple-700">P</div>
+                            <div className="text-xs text-gray-600">
+                              {courseData.gradePCount}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              ({((courseData.gradePCount / courseData.totalStudents) * 100).toFixed(1)}%)
+                            </div>
+                          </div>
+
+                          <div className="p-2 bg-red-50 rounded text-center">
+                            <div className="text-red-700">NP</div>
+                            <div className="text-xs text-gray-600">
+                              {courseData.gradeNPCount}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              ({((courseData.gradeNPCount / courseData.totalStudents) * 100).toFixed(1)}%)
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+
+
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );

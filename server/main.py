@@ -61,6 +61,8 @@ def sort_raw_grade_data(grade_data: dict, course_data: dict):
                 "averageGPA": 0,
                 "courses": {},
                 "studentsTaught": 0,
+                # "difficulty": 0,
+                # "wouldTakeAgain": 0,
                 "stats": {
                     "gradeACount": 0,
                     "gradeBCount": 0,
@@ -98,7 +100,7 @@ def sort_raw_grade_data(grade_data: dict, course_data: dict):
         total_score = 4*grades["gradeACount"] + 3*grades["gradeBCount"] + 2*grades["gradeCCount"] + 1*grades["gradeDCount"] + 0*grades["gradeFCount"]
         grades["averageGPA"] = round(total_score / gpa_total_students if gpa_total_students > 0 else 0, 2)
         grades["totalStudents"] = pnp_total_students + gpa_total_students
-        grades["passRate"] = sum(grades[k] for k in ["gradeACount","gradeBCount","gradeCCount"])/grades["totalStudents"]
+        grades["passRate"] = sum(grades[k] for k in ["gradeACount","gradeBCount","gradeCCount", "gradePCount"])/grades["totalStudents"]
         
 
         # Add to total data
@@ -125,6 +127,7 @@ def sort_raw_grade_data(grade_data: dict, course_data: dict):
         overall_gpa = gpa_total_score / gpa_total_students if total_students > 0 else 0
         profile["averageGPA"] = round(overall_gpa, 2)
         profile["studentsTaught"] += total_students
+        profile["studentsTaughtNoPNP"] = gpa_total_students
         profile["passRate"] = round(passing_students / total_students, 2)
         profile["dropCount"] = w_total_students
         
