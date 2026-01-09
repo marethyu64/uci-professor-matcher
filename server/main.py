@@ -1,11 +1,11 @@
 # Frontend and backend communicate through HTTP requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import requests
 
 
 # Creates an app instance
-app = Flask(__name__)
+app = Flask(__name__, static_folder="../client/dist", static_url_path="/")
 cors = CORS(app, origins='*')
 
 def fetch_anteater_api_data(endpoint: str, params: dict):
@@ -160,6 +160,10 @@ def compute_search(dept_name: str, course_number: str):
     formatted_courses = sort_raw_grade_data(raw_grade_data["data"], raw_course_data["data"][0])
     
     return formatted_courses
+
+@app.route('/')
+def home():
+    return send_from_directory(app.static_folder, "index.html")
 
 @app.route('/api/departments', methods=['GET'])
 def fetch_departments():

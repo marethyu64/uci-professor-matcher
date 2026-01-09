@@ -14,7 +14,6 @@ export default function App() {
   // Search results and state
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
   
   // Department list from backend
@@ -72,7 +71,6 @@ export default function App() {
     }
 
     try {
-      setIsLoading(true);
       setSearchError('Loading...');
 
       // Call backend API with department and course number
@@ -97,7 +95,7 @@ export default function App() {
       setSearchError("Failed to reach API! Please refresh or try again later.");
       setSearchResults([]);
     } finally {
-      setIsLoading(false);
+      // Finish loading!
     }
   };
 
