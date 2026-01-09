@@ -162,18 +162,6 @@ def compute_search(dept_name: str, course_number: str):
     
     return formatted_courses
 
-@app.route('/')
-def home():
-    return send_from_directory(app.static_folder, "index.html")
-
-# Catch-all for React Router
-@app.route("/<path:path>")
-def catch_all(path):
-    file_path = os.path.join(app.static_folder, path)
-    if os.path.exists(file_path):
-        return send_from_directory(app.static_folder, path)
-    return send_from_directory(app.static_folder, "index.html")
-
 @app.route('/api/departments', methods=['GET'])
 def fetch_departments():
     return jsonify(fetch_anteater_api_data("websoc/departments", {}))
@@ -204,6 +192,17 @@ def fetch_courses():
     dept_name = request.args.get("deptName")
     course_number = request.args.get("courseNumber")
     return jsonify(compute_search(dept_name, course_number))
+
+
+@app.route('/')
+def home():
+    return send_from_directory(app.static_folder, "index.html")
+
+@app.route("/<path:path>")
+def catch_all(path):
+    if path.startswith("api/"):
+        return {"error": "Not found"}, 404
+    return send_from_directory(app.static_folder, "index.html")
 
 
 if __name__ == "__main__":

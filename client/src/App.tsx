@@ -4,7 +4,7 @@ import { ProfessorCard } from './components/ProfessorCard';
 import axios from 'axios';
 
 // Backend API base URL - change this if your backend runs on a different port
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 
 export default function App() {
   // Search parameters
