@@ -2,10 +2,11 @@
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import requests
+import os
 
 
 # Creates an app instance
-app = Flask(__name__, static_folder="../client/dist", static_url_path="/")
+app = Flask(__name__, static_folder="static", static_url_path="")
 cors = CORS(app, origins='*')
 
 def fetch_anteater_api_data(endpoint: str, params: dict):
@@ -163,6 +164,14 @@ def compute_search(dept_name: str, course_number: str):
 
 @app.route('/')
 def home():
+    return send_from_directory(app.static_folder, "index.html")
+
+# Catch-all for React Router
+@app.route("/<path:path>")
+def catch_all(path):
+    file_path = os.path.join(app.static_folder, path)
+    if os.path.exists(file_path):
+        return send_from_directory(app.static_folder, path)
     return send_from_directory(app.static_folder, "index.html")
 
 @app.route('/api/departments', methods=['GET'])
